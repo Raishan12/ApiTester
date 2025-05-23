@@ -2,12 +2,22 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 const FormData = () => {
-  const { formData = [{ key: '', value: '' }, { key: '', value: '' }], setFormData = () => {} } = useOutletContext();
+  const { formData = [{ key: '', value: '' }], setFormData = () => {} } = useOutletContext();
 
   const handleFormDataChange = (index, field, value) => {
     const newFormData = [...formData];
     newFormData[index][field] = value;
     setFormData(newFormData);
+
+    // Add new row if typing in the last row
+    if (index === formData.length - 1 && value) {
+      setFormData([...newFormData, { key: '', value: '' }]);
+    }
+  };
+
+  const handleDeleteRow = (index) => {
+    if (index === 0) return; // Prevent deletion of first row
+    setFormData(formData.filter((_, i) => i !== index));
   };
 
   return (
@@ -18,6 +28,7 @@ const FormData = () => {
           <tr>
             <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Key</th>
             <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Value</th>
+            <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -42,6 +53,16 @@ const FormData = () => {
                   value={data.value || ''}
                   onChange={(e) => handleFormDataChange(index, 'value', e.target.value)}
                 />
+              </td>
+              <td className="border border-gray-600">
+                {index !== 0 && (
+                  <button
+                    onClick={() => handleDeleteRow(index)}
+                    className="bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}

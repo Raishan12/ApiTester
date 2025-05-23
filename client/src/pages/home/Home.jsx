@@ -8,10 +8,10 @@ const Home = () => {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formUrlencodedData, setFormUrlencodedData] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
-  const [formData, setFormData] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
-  const [params, setParams] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
-  const [headers, setHeaders] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
+  const [formUrlencodedData, setFormUrlencodedData] = useState([{ key: '', value: '' }]);
+  const [formData, setFormData] = useState([{ key: '', value: '' }]);
+  const [params, setParams] = useState([{ key: '', value: '' }]);
+  const [headers, setHeaders] = useState([{ key: '', value: '' }]);
   const [rawBody, setRawBody] = useState('');
   const [responseTime, setResponseTime] = useState(null);
   const [statusCode, setStatusCode] = useState(null);
@@ -28,6 +28,7 @@ const Home = () => {
     let config = { method: method.toLowerCase(), url };
     const startTime = performance.now();
 
+    // Add query parameters
     if (params.some(({ key, value }) => key && value)) {
       const queryString = params
         .filter(({ key, value }) => key && value)
@@ -36,26 +37,28 @@ const Home = () => {
       config.url = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
     }
 
+    // Add headers
     config.headers = headers.reduce((acc, { key, value }) => {
       if (key && value) acc[key] = value;
       return acc;
     }, {});
 
-    if (location.pathname.includes('formurlencoded') && method.toLowerCase() === 'post') {
+    // Handle body based on route
+    if (location.pathname.includes('formurlencoded') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
       config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       const formData = new URLSearchParams();
       formUrlencodedData.forEach(({ key, value }) => {
         if (key && value) formData.append(key, value);
       });
       config.data = formData.toString();
-    } else if (location.pathname.includes('formdata') && method.toLowerCase() === 'post') {
+    } else if (location.pathname.includes('formdata') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
       config.headers['Content-Type'] = 'multipart/form-data';
-      const formData = new FormData();
+      const formDataObj = new FormData();
       formData.forEach(({ key, value }) => {
-        if (key && value) formData.append(key, value);
+        if (key && value) formDataObj.append(key, value);
       });
-      config.data = formData;
-    } else if (location.pathname.includes('raw') && method.toLowerCase() === 'post') {
+      config.data = formDataObj;
+    } else if (location.pathname.includes('raw') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
       try {
         config.headers['Content-Type'] = 'application/json';
         config.data = JSON.parse(rawBody || '{}');
@@ -71,9 +74,11 @@ const Home = () => {
       setResponse(res.data);
       setStatusCode(res.status);
       setResponseTime((performance.now() - startTime).toFixed(2));
+      setResponseHeaders(res.headers);
     } catch (err) {
       setError(err.message || 'An error occurred');
       setStatusCode(err.response?.status || null);
+      setResponseHeaders(err.response?.headers || {});
     } finally {
       setLoading(false);
     }
@@ -134,10 +139,10 @@ const Home = () => {
           <div className="ml-4 mt-2">
             <p><strong>Status:</strong> {statusCode || 'N/A'}</p>
             <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p>
-            <p><strong>Headers:</strong> {JSON.stringify(response?.headers || {}, null, 2)}</p>
-            <pre className="text-sm">
-              {JSON.stringify(response, null, 2)}
-            </pre>
+            <p><strong>Headers:</strong></p>
+            <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre>
+            <p><strong>Body:</strong></p>
+            <pre className="text-sm">{JSON.stringify(response, null, 2)}</pre>
           </div>
         )}
       </div>
