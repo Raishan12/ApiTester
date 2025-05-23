@@ -10,7 +10,7 @@ const Body = () => {
         <li><Link to="none" className="hover:text-blue-400">none</Link></li>
         <li><Link to="formdata" className="hover:text-blue-400">form-data</Link></li>
         <li><Link to="formurlencoded" className="hover:text-blue-400">x-www-form-urlencoded</Link></li>
-        <li><Link to="#" className="hover:text-blue-400">raw</Link></li>
+        <li><Link to="raw" className="hover:text-blue-400">raw</Link></li>
         <li><Link to="#" className="hover:text-blue-400">binary</Link></li>
         <li><Link to="#" className="hover:text-blue-400">GraphQL</Link></li>
       </ul>
@@ -20,5 +20,5 @@ const Body = () => {
     </div>
   );
 };
-  
+
 export default Body;

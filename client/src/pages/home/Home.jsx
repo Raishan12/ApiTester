@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const Home = () => {
   const [method, setMethod] = useState('get');
@@ -7,10 +8,13 @@ const Home = () => {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formUrlencodedData, setFormUrlencodedData] = useState([
-    { key: '', value: '' },
-    { key: '', value: '' },
-  ]);
+  const [formUrlencodedData, setFormUrlencodedData] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
+  const [formData, setFormData] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
+  const [params, setParams] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
+  const [headers, setHeaders] = useState([{ key: '', value: '' }, { key: '', value: '' }]);
+  const [rawBody, setRawBody] = useState('');
+  const [responseTime, setResponseTime] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
 
   const location = useLocation();
 
@@ -18,26 +22,58 @@ const Home = () => {
     setLoading(true);
     setError(null);
     setResponse(null);
+    setResponseTime(null);
+    setStatusCode(null);
 
-    let config = {
-      method: method.toLowerCase(),
-      url,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    };
+    let config = { method: method.toLowerCase(), url };
+    const startTime = performance.now();
+
+    if (params.some(({ key, value }) => key && value)) {
+      const queryString = params
+        .filter(({ key, value }) => key && value)
+        .map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+      config.url = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
+    }
+
+    config.headers = headers.reduce((acc, { key, value }) => {
+      if (key && value) acc[key] = value;
+      return acc;
+    }, {});
 
     if (location.pathname.includes('formurlencoded') && method.toLowerCase() === 'post') {
+      config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       const formData = new URLSearchParams();
       formUrlencodedData.forEach(({ key, value }) => {
         if (key && value) formData.append(key, value);
       });
       config.data = formData.toString();
+    } else if (location.pathname.includes('formdata') && method.toLowerCase() === 'post') {
+      config.headers['Content-Type'] = 'multipart/form-data';
+      const formData = new FormData();
+      formData.forEach(({ key, value }) => {
+        if (key && value) formData.append(key, value);
+      });
+      config.data = formData;
+    } else if (location.pathname.includes('raw') && method.toLowerCase() === 'post') {
+      try {
+        config.headers['Content-Type'] = 'application/json';
+        config.data = JSON.parse(rawBody || '{}');
+      } catch (e) {
+        setError('Invalid JSON format in raw body');
+        setLoading(false);
+        return;
+      }
     }
 
     try {
       const res = await axios(config);
       setResponse(res.data);
+      setStatusCode(res.status);
+      setResponseTime((performance.now() - startTime).toFixed(2));
     } catch (err) {
       setError(err.message || 'An error occurred');
+      setStatusCode(err.response?.status || null);
     } finally {
       setLoading(false);
     }
@@ -80,14 +116,14 @@ const Home = () => {
       <div className="data mt-5">
         <ul className="flex gap-5 border-b border-gray-600 pb-2">
           <li><Link to="/params" className="hover:text-blue-400">Params</Link></li>
-          <li><Link to="#" className="hover:text-blue-400">Authorization</Link></li>
-          <li><Link to="#" className="hover:text-blue-400">Headers</Link></li>
+          <li><Link to="/headers" className="hover:text-blue-400">Headers</Link></li>
           <li><Link to="/body/none" className="hover:text-blue-400">Body</Link></li>
+          <li><Link to="#" className="hover:text-blue-400">Authorization</Link></li>
           <li><Link to="#" className="hover:text-blue-400">Script</Link></li>
           <li><Link to="#" className="hover:text-blue-400">Settings</Link></li>
         </ul>
         <div className="outlet mt-3">
-          <Outlet context={{ formUrlencodedData, setFormUrlencodedData }} />
+          <Outlet context={{ formUrlencodedData, setFormUrlencodedData, formData, setFormData, params, setParams, headers, setHeaders, rawBody, setRawBody }} />
         </div>
       </div>
       <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 fixed bottom-0 left-0 overflow-auto">
@@ -95,9 +131,14 @@ const Home = () => {
         {loading && <p className="ml-4 mt-2">Loading...</p>}
         {error && <p className="ml-4 mt-2 text-red-500">{error}</p>}
         {response && (
-          <pre className="ml-4 mt-2 text-sm">
-            {JSON.stringify(response, null, 2)}
-          </pre>
+          <div className="ml-4 mt-2">
+            <p><strong>Status:</strong> {statusCode || 'N/A'}</p>
+            <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p>
+            <p><strong>Headers:</strong> {JSON.stringify(response?.headers || {}, null, 2)}</p>
+            <pre className="text-sm">
+              {JSON.stringify(response, null, 2)}
+            </pre>
+          </div>
         )}
       </div>
     </div>

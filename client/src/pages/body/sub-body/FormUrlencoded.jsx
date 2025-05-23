@@ -2,8 +2,7 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 const FormUrlencoded = () => {
-  const context = useOutletContext() || {};
-  const { formUrlencodedData = [{ key: '', value: '' }, { key: '', value: '' }], setFormUrlencodedData = () => {} } = context;
+  const { formUrlencodedData = [{ key: '', value: '' }, { key: '', value: '' }], setFormUrlencodedData = () => {} } = useOutletContext();
 
   const handleFormDataChange = (index, field, value) => {
     const newFormData = [...formUrlencodedData];
@@ -14,11 +13,11 @@ const FormUrlencoded = () => {
   return (
     <div className="p-4">
       <h1 className="font-bold text-lg mb-2 text-white">x-www-form-urlencoded</h1>
-      <table className="w-3/4 border-2 border-gray-600">
+      <table className="w-3/4 border-2 border-gray-600 bg-gray-800">
         <thead>
           <tr>
-            <th className="border border-b-2 border-gray-600 p-2 text-left bg-gray-800 text-white">Key</th>
-            <th className="border border-b-2 border-gray-600 p-2 text-left bg-gray-800 text-white">Value</th>
+            <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Key</th>
+            <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Value</th>
           </tr>
         </thead>
         <tbody>

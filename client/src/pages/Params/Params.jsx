@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 const Params = () => {
-  const [params, setParams] = useState([
-    { key: '', value: '' },
-    { key: '', value: '' },
-  ]);
+  const { params = [{ key: '', value: '' }, { key: '', value: '' }], setParams = () => {} } = useOutletContext();
 
   const handleParamChange = (index, field, value) => {
     const newParams = [...params];
@@ -14,12 +12,12 @@ const Params = () => {
 
   return (
     <div className="p-4">
-      <h1 className="font-bold text-lg mb-2">Query Params</h1>
-      <table className="w-3/4 border-2 border-gray-600">
+      <h1 className="font-bold text-lg mb-2 text-white">Query Params</h1>
+      <table className="w-3/4 border-2 border-gray-600 bg-gray-800">
         <thead>
           <tr>
-            <th className="border border-b-2 border-gray-600 p-2 border-gray-600 ">Key</th>
-            <th className="border border-b-2 border-gray-600 p-2 border-gray-600">Value</th>
+            <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Key</th>
+            <th className="border border-b-2 border-gray-600 p-2 text-white text-left">Value</th>
           </tr>
         </thead>
         <tbody>
@@ -31,7 +29,7 @@ const Params = () => {
                   name="key"
                   className="w-full bg-gray-800 text-white focus:outline-none px-2 py-1"
                   placeholder="Key"
-                  value={param.key}
+                  value={param.key || ''}
                   onChange={(e) => handleParamChange(index, 'key', e.target.value)}
                 />
               </td>
@@ -41,7 +39,7 @@ const Params = () => {
                   name="value"
                   className="w-full bg-gray-800 text-white focus:outline-none px-2 py-1"
                   placeholder="Value"
-                  value={param.value}
+                  value={param.value || ''}
                   onChange={(e) => handleParamChange(index, 'value', e.target.value)}
                 />
               </td>
