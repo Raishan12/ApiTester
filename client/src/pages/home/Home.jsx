@@ -70,6 +70,7 @@ const Home = () => {
     }
 
     try {
+      console.log(config)
       const res = await axios(config);
       setResponse(res.data);
       setStatusCode(res.status);
@@ -131,16 +132,16 @@ const Home = () => {
           <Outlet context={{ formUrlencodedData, setFormUrlencodedData, formData, setFormData, params, setParams, headers, setHeaders, rawBody, setRawBody }} />
         </div>
       </div>
-      <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 fixed bottom-0 left-0 overflow-auto">
+      <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 mt-52 left-0 overflow-auto">
         <h1 className="text-2xl ml-4 underline decoration-2 underline-offset-4">RESPONSE</h1>
         {loading && <p className="ml-4 mt-2">Loading...</p>}
-        {error && <p className="ml-4 mt-2 text-red-500">{error}</p>}
+        {/* {error && <p className="ml-4 mt-2 text-red-500">{error}</p>} */}
         {response && (
           <div className="ml-4 mt-2">
-            <p><strong>Status:</strong> {statusCode || 'N/A'}</p>
-            <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p>
-            <p><strong>Headers:</strong></p>
-            <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre>
+            {/* <p><strong>Status:</strong> {statusCode || 'N/A'}</p> */}
+            {/* <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p> */}
+            {/* <p><strong>Headers:</strong></p> */}
+            {/* <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre> */}
             <p><strong>Body:</strong></p>
             <pre className="text-sm">{JSON.stringify(response, null, 2)}</pre>
           </div>

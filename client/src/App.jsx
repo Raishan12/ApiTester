@@ -8,6 +8,9 @@ import FormData from './pages/body/sub-body/FormData';
 import None from './pages/body/sub-body/None';
 import FormUrlencoded from './pages/body/sub-body/FormUrlencoded';
 import Raw from './pages/body/sub-body/Raw';
+import Error from './pages/error/Error';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
 const App = () => {
   return (
@@ -23,6 +26,9 @@ const App = () => {
               <Route path="raw" element={<Raw />} />
             </Route>
           </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Register />} />
+          <Route path="*" element={<Error />} />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>

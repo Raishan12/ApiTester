@@ -2,7 +2,7 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 const Params = () => {
-  const { params = [{ key: '', value: '' }], setParams = () => {} } = useOutletContext();
+  const { params = [{ key: '', value: '' }], setParams = () => { } } = useOutletContext();
 
   const handleParamChange = (index, field, value) => {
     const newParams = [...params];
@@ -54,13 +54,15 @@ const Params = () => {
                   onChange={(e) => handleParamChange(index, 'value', e.target.value)}
                 />
               </td>
-              <td className="border border-gray-600">
+              <td className="border border-gray-600 text-center hover:bg-gray-600"
+                onClick={() => handleDeleteRow(index)}
+              >
                 {index !== 0 && (
                   <button
-                    onClick={() => handleDeleteRow(index)}
-                    className="bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600"
+                    
+                    className="px-2 py-1 rounded text-center hover:bg-gray-600"
                   >
-                    Delete
+                    🗑️
                   </button>
                 )}
               </td>
