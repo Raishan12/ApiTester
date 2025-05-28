@@ -86,8 +86,9 @@ const Home = () => {
   };
 
   return (
-    <div className="m-4">
-      <h1 className="text-white text-center text-2xl font-bold mb-4">API TESTER ONLINE</h1>
+    <>
+    <div className="mx-4">
+      <h1 className="text-white text-center text-2xl font-bold my-4">API TESTER ONLINE</h1>
       <div className="flex justify-center gap-2 mb-4">
         <select
           name="method"
@@ -148,6 +149,7 @@ const Home = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

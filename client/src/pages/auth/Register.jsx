@@ -1,19 +1,32 @@
+import axios from 'axios';
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth0 } from "@auth0/auth0-react";
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [user, setUser] = useState({})
+  const { loginWithPopup } = useAuth0();
+  const navigate = useNavigate()
 
-  const handleGoogleSignup = () => {
-    alert('Google signup clicked');
-  };
-
-  const handleRegister = (e) => {
+  const handleRegister = async(e) => {
     e.preventDefault();
     console.log('Name:', name);
     console.log('Email:', email);
     console.log('Password:', password);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/signup", {name, email, password})
+      console.log(res)
+      setUser(res.data.data)
+      localStorage.setItem("token",res.data.token)
+      navigate("/")
+    } catch (error) {
+      console.log(error)      
+    }
+
   };
 
   return (
@@ -24,7 +37,7 @@ const Register = () => {
 
 
         <button
-          onClick={handleGoogleSignup}
+          onClick={() => loginWithPopup()}
           className="w-full font-bold flex items-center justify-center gap-5 px-4 py-2 border border-gray-500 bg-gray-700 hover:bg-gray-600 transition rounded-md"
         >
            <svg className="size-6" viewBox="0 0 24 24" fill="currentColor">
@@ -82,6 +95,7 @@ const Register = () => {
           >
             Sign Up
           </button>
+          <p>Already have an account? <Link to={"/login"} >Login</Link></p>
         </form>
       </div>
     </div>

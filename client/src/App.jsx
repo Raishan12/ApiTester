@@ -11,10 +11,12 @@ import Raw from './pages/body/sub-body/Raw';
 import Error from './pages/error/Error';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import Navbar from './component/navbar/Navbar';
 
 const App = () => {
   return (
     <BrowserRouter>
+    <Navbar />
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Home />}>
