@@ -6,7 +6,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { loginWithRedirect } = useAuth0();
+  const { loginWithPopup } = useAuth0();
   const navigate = useNavigate()
 
   const handleLogin = async(e) => {
@@ -31,7 +31,7 @@ const Login = () => {
         <h2 className="text-2xl font-bold text-center mb-6">Login to API Tester</h2>
 
         <button
-          onClick={() => loginWithRedirect()}
+          onClick={() => loginWithPopup()}
           className="w-full font-bold flex items-center justify-center gap-5 px-4 py-2 border border-gray-500 bg-gray-700 hover:bg-gray-600 transition rounded-md"
         >
            <svg className="size-6" viewBox="0 0 24 24" fill="currentColor">

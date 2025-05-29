@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Home = () => {
@@ -15,8 +15,18 @@ const Home = () => {
   const [rawBody, setRawBody] = useState('');
   const [responseTime, setResponseTime] = useState(null);
   const [statusCode, setStatusCode] = useState(null);
-
   const location = useLocation();
+  const navigate = useNavigate()
+
+  const openparams = ()=>{
+    navigate("/params")
+  }
+
+  useEffect(()=>{
+    if(location.pathname==="/")
+      openparams()
+  },[])
+
 
   const handleSend = async () => {
     setLoading(true);
@@ -87,68 +97,68 @@ const Home = () => {
 
   return (
     <>
-    <div className="mx-4">
-      <h1 className="text-white text-center text-2xl font-bold my-4">API TESTER ONLINE</h1>
-      <div className="flex justify-center gap-2 mb-4">
-        <select
-          name="method"
-          id="method"
-          className="border border-gray-600 bg-gray-800 text-white rounded p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={method}
-          onChange={(e) => setMethod(e.target.value)}
-        >
-          <option className="text-red-600 font-bold" value="get">GET</option>
-          <option className="text-green-600 font-bold" value="post">POST</option>
-          <option className="text-yellow-500 font-bold" value="put">PUT</option>
-          <option className="text-blue-600 font-bold" value="delete">DELETE</option>
-          <option className="text-purple-600 font-bold" value="patch">PATCH</option>
-        </select>
-        <input
-          type="text"
-          name="url"
-          id="url"
-          className="border border-gray-600 bg-gray-800 text-white rounded p-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter URL or paste text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <button
-          className="bg-blue-500 px-8 py-2 rounded text-white font-bold border border-gray-600 hover:bg-blue-600"
-          onClick={handleSend}
-          disabled={loading}
-        >
-          {loading ? 'Sending...' : 'Send'}
-        </button>
-      </div>
-      <div className="data mt-5">
-        <ul className="flex gap-5 border-b border-gray-600 pb-2">
-          <li><Link to="/params" className="hover:text-blue-400">Params</Link></li>
-          <li><Link to="/headers" className="hover:text-blue-400">Headers</Link></li>
-          <li><Link to="/body/none" className="hover:text-blue-400">Body</Link></li>
-          <li><Link to="#" className="hover:text-blue-400">Authorization</Link></li>
-          <li><Link to="#" className="hover:text-blue-400">Script</Link></li>
-          <li><Link to="#" className="hover:text-blue-400">Settings</Link></li>
-        </ul>
-        <div className="outlet mt-3">
-          <Outlet context={{ formUrlencodedData, setFormUrlencodedData, formData, setFormData, params, setParams, headers, setHeaders, rawBody, setRawBody }} />
+      <div className="mx-4">
+        <h1 className="text-white text-center text-2xl font-bold my-4">API TESTER ONLINE</h1>
+        <div className="flex justify-center gap-2 mb-4">
+          <select
+            name="method"
+            id="method"
+            className="border border-gray-600 bg-gray-800 text-white rounded p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+          >
+            <option className="text-red-600 font-bold" value="get">GET</option>
+            <option className="text-green-600 font-bold" value="post">POST</option>
+            <option className="text-yellow-500 font-bold" value="put">PUT</option>
+            <option className="text-blue-600 font-bold" value="delete">DELETE</option>
+            <option className="text-purple-600 font-bold" value="patch">PATCH</option>
+          </select>
+          <input
+            type="text"
+            name="url"
+            id="url"
+            className="border border-gray-600 bg-gray-800 text-white rounded p-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter URL or paste text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button
+            className="bg-blue-500 px-8 py-2 rounded text-white font-bold border border-gray-600 hover:bg-blue-600"
+            onClick={handleSend}
+            disabled={loading}
+          >
+            {loading ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+        <div className="data mt-5">
+          <ul className="flex gap-5 border-b border-gray-600 pb-2">
+            <li><Link to="/params" className="hover:text-blue-400">Params</Link></li>
+            <li><Link to="/headers" className="hover:text-blue-400">Headers</Link></li>
+            <li><Link to="/body/none" className="hover:text-blue-400">Body</Link></li>
+            <li><Link to="#" className="hover:text-blue-400">Authorization</Link></li>
+            <li><Link to="#" className="hover:text-blue-400">Script</Link></li>
+            <li><Link to="#" className="hover:text-blue-400">Settings</Link></li>
+          </ul>
+          <div className="outlet mt-3">
+            <Outlet context={{ formUrlencodedData, setFormUrlencodedData, formData, setFormData, params, setParams, headers, setHeaders, rawBody, setRawBody }} />
+          </div>
+        </div>
+        <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 mt-52 left-0 overflow-auto">
+          <h1 className="text-2xl ml-4 underline decoration-2 underline-offset-4">RESPONSE</h1>
+          {loading && <p className="ml-4 mt-2">Loading...</p>}
+          {/* {error && <p className="ml-4 mt-2 text-red-500">{error}</p>} */}
+          {response && (
+            <div className="ml-4 mt-2">
+              <p><strong>Status:</strong> {statusCode || 'N/A'}</p>
+              <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p>
+              <p><strong>Headers:</strong></p>
+              <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre>
+              <p><strong>Body:</strong></p>
+              <pre className="text-sm">{JSON.stringify(response, null, 2)}</pre>
+            </div>
+          )}
         </div>
       </div>
-      <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 mt-52 left-0 overflow-auto">
-        <h1 className="text-2xl ml-4 underline decoration-2 underline-offset-4">RESPONSE</h1>
-        {loading && <p className="ml-4 mt-2">Loading...</p>}
-        {/* {error && <p className="ml-4 mt-2 text-red-500">{error}</p>} */}
-        {response && (
-          <div className="ml-4 mt-2">
-            {/* <p><strong>Status:</strong> {statusCode || 'N/A'}</p> */}
-            {/* <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p> */}
-            {/* <p><strong>Headers:</strong></p> */}
-            {/* <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre> */}
-            <p><strong>Body:</strong></p>
-            <pre className="text-sm">{JSON.stringify(response, null, 2)}</pre>
-          </div>
-        )}
-      </div>
-    </div>
     </>
   );
 };

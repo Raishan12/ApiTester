@@ -28,20 +28,20 @@ export const signup = async (req, res) => {
   }
 }
 
-export const autsignup = async (req, res) => {
+export const authsignup = async (req, res) => {
   try {
     console.log(req.body)
     const { name, email } = req.body
 
     const userExist = await userSchema.findOne({ email })
-
+    console.log(userExist)
     if (userExist) {
-      if (userExist.auth0) {
-        return res.status(200).send({ message: "User loggedIn", data })
-      }
+      console.log(userExist.auth0)
+      if (userExist.auth0)
+        return res.status(200).send({ message: "User loggedIn", userExist })
     }
 
-    const data = await userSchema.create({ name, email })
+    const data = await userSchema.create({ name, email, auth0: true })
     res.status(201).send({ message: "User LoggedIn", data })
 
   } catch (error) {
