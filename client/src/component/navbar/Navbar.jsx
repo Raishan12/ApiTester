@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import { useAuth0 } from "@auth0/auth0-react";
+import { useTheme } from '../../context/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
 
 
 const Navbar = () => {
@@ -11,6 +13,7 @@ const Navbar = () => {
     const navigate = useNavigate()
     const { user, isAuthenticated, isLoading, logout } = useAuth0();
     const token = localStorage.getItem("token")
+    const { darkMode, setDarkMode } = useTheme();
 
     const authsign = async () => {
         const name = user.name
@@ -18,7 +21,7 @@ const Navbar = () => {
         console.log(name, email)
         const res = await axios.post("http://localhost:5000/api/authsignup", { name, email })
         console.log(res)
-        localStorage.setItem("id",res.data.userExist._id)
+        localStorage.setItem("id", res.data.userExist._id)
         navigate("/")
     }
 
@@ -34,7 +37,7 @@ const Navbar = () => {
             if (!token) return
             const decoded = jwtDecode(token)
             const id = decoded.id
-            localStorage.setItem("id",id)
+            localStorage.setItem("id", id)
             const res = await axios.get(`http://localhost:5000/api/getuser/${id}`)
             console.log(res)
             setUserdata(res.data)
@@ -47,15 +50,10 @@ const Navbar = () => {
         localStorage.removeItem("token")
         localStorage.removeItem("token")
         setIsDropdownOpen(false)
-        if(isAuthenticated)
+        if (isAuthenticated)
             logout({ logoutParams: { returnTo: window.location.origin } })
         navigate("/login")
     }
-
-    useEffect(() => {
-        if (token)
-            navigate("/params")
-    }, [token, navigate])
 
     useEffect(() => {
         loaduser()
@@ -63,8 +61,15 @@ const Navbar = () => {
 
     return (
         <div className='flex px-4 items-center justify-between h-20 bg-gray-950 shadow-md text-white'>
-            <div><h2 className='text-xl font-bold'>API TESTER ONLINE</h2></div>
-            <div className='relative'>
+            <div><h2 className='text-xl font-bold'><Link to={"/"}>API TESTER ONLINE</Link> </h2></div>
+            <div className='relative flex'>
+            <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="p-2 rounded hover:bg-gray-800"
+                    title="Toggle Theme"
+                >
+                    {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
                 {
                     !["/login", "/signup"].includes(location.pathname) && (
                         <>
@@ -74,7 +79,7 @@ const Navbar = () => {
                                         className='cursor-pointer hover:text-gray-300'
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     >
-                                        {userdata?userdata.name : user?.name}
+                                        {userdata ? userdata.name : user?.name}
                                     </p>
                                     <img
                                         src="/user.png"
@@ -83,7 +88,7 @@ const Navbar = () => {
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     />
                                     {isDropdownOpen && (
-                                        <div className='absolute -right-5 mt-48 w-48 bg-gray-950 rounded-b-md shadow-lg py-1 z-10'>
+                                        <div className='absolute -right-4 mt-48 w-48 bg-gray-950 rounded-b-md shadow-lg py-1 z-10'>
                                             <Link
                                                 to="/profile"
                                                 className='block px-4 py-2 text-sm hover:bg-gray-700'
@@ -121,9 +126,11 @@ const Navbar = () => {
                         </>
                     )
                 }
+
             </div>
         </div>
     )
 }
 
 export default Navbar
+

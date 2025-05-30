@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { Auth0Provider } from '@auth0/auth0-react';
+import { ThemeProvider } from './context/ThemeContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -14,7 +15,9 @@ createRoot(document.getElementById('root')).render(
       }}
       cacheLocation='localstorage'
     >
+      <ThemeProvider>
       <App />
-    </Auth0Provider>,
+      </ThemeProvider>
+    </Auth0Provider>
   </StrictMode>,
 )

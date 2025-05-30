@@ -1,165 +1,458 @@
-import React, { useEffect, useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const Home = () => {
-  const [method, setMethod] = useState('get');
-  const [url, setUrl] = useState('');
-  const [response, setResponse] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [formUrlencodedData, setFormUrlencodedData] = useState([{ key: '', value: '' }]);
-  const [formData, setFormData] = useState([{ key: '', value: '' }]);
-  const [params, setParams] = useState([{ key: '', value: '' }]);
-  const [headers, setHeaders] = useState([{ key: '', value: '' }]);
-  const [rawBody, setRawBody] = useState('');
-  const [responseTime, setResponseTime] = useState(null);
-  const [statusCode, setStatusCode] = useState(null);
-  const location = useLocation();
-  const navigate = useNavigate()
+// Reusable Key-Value Row Table
+const KeyValueTable = ({ data, setData }) => {
+  const handleChange = (index, field, value) => {
+    const updated = [...data];
+    updated[index][field] = value;
+    setData(updated);
+  };
 
-  const openparams = ()=>{
-    navigate("/params")
-  }
-
-  useEffect(()=>{
-    if(location.pathname==="/")
-      openparams()
-  },[])
-
-
-  const handleSend = async () => {
-    setLoading(true);
-    setError(null);
-    setResponse(null);
-    setResponseTime(null);
-    setStatusCode(null);
-
-    let config = { method: method.toLowerCase(), url };
-    const startTime = performance.now();
-
-    // Add query parameters
-    if (params.some(({ key, value }) => key && value)) {
-      const queryString = params
-        .filter(({ key, value }) => key && value)
-        .map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join('&');
-      config.url = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
-    }
-
-    // Add headers
-    config.headers = headers.reduce((acc, { key, value }) => {
-      if (key && value) acc[key] = value;
-      return acc;
-    }, {});
-
-    // Handle body based on route
-    if (location.pathname.includes('formurlencoded') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
-      config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      const formData = new URLSearchParams();
-      formUrlencodedData.forEach(({ key, value }) => {
-        if (key && value) formData.append(key, value);
-      });
-      config.data = formData.toString();
-    } else if (location.pathname.includes('formdata') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
-      config.headers['Content-Type'] = 'multipart/form-data';
-      const formDataObj = new FormData();
-      formData.forEach(({ key, value }) => {
-        if (key && value) formDataObj.append(key, value);
-      });
-      config.data = formDataObj;
-    } else if (location.pathname.includes('raw') && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
-      try {
-        config.headers['Content-Type'] = 'application/json';
-        config.data = JSON.parse(rawBody || '{}');
-      } catch (e) {
-        setError('Invalid JSON format in raw body');
-        setLoading(false);
-        return;
-      }
-    }
-
-    try {
-      console.log(config)
-      const res = await axios(config);
-      setResponse(res.data);
-      setStatusCode(res.status);
-      setResponseTime((performance.now() - startTime).toFixed(2));
-      setResponseHeaders(res.headers);
-    } catch (err) {
-      setError(err.message || 'An error occurred');
-      setStatusCode(err.response?.status || null);
-      setResponseHeaders(err.response?.headers || {});
-    } finally {
-      setLoading(false);
-    }
+  const addRow = () => setData([...data, { key: "", value: "" }]);
+  const removeRow = (index) => {
+    const updated = [...data];
+    updated.splice(index, 1);
+    setData(updated);
   };
 
   return (
-    <>
-      <div className="mx-4">
-        <h1 className="text-white text-center text-2xl font-bold my-4">API TESTER ONLINE</h1>
-        <div className="flex justify-center gap-2 mb-4">
-          <select
-            name="method"
-            id="method"
-            className="border border-gray-600 bg-gray-800 text-white rounded p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-          >
-            <option className="text-red-600 font-bold" value="get">GET</option>
-            <option className="text-green-600 font-bold" value="post">POST</option>
-            <option className="text-yellow-500 font-bold" value="put">PUT</option>
-            <option className="text-blue-600 font-bold" value="delete">DELETE</option>
-            <option className="text-purple-600 font-bold" value="patch">PATCH</option>
-          </select>
+    <div>
+      {data.map((row, index) => (
+        <div key={index} className="flex space-x-2 mb-1">
           <input
             type="text"
-            name="url"
-            id="url"
-            className="border border-gray-600 bg-gray-800 text-white rounded p-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter URL or paste text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            value={row.key}
+            placeholder="Key"
+            onChange={(e) => handleChange(index, "key", e.target.value)}
+            className="border px-2 py-1 rounded w-1/2 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
           />
-          <button
-            className="bg-blue-500 px-8 py-2 rounded text-white font-bold border border-gray-600 hover:bg-blue-600"
-            onClick={handleSend}
-            disabled={loading}
+          <input
+            type="text"
+            value={row.value}
+            placeholder="Value"
+            onChange={(e) => handleChange(index, "value", e.target.value)}
+            className="border px-2 py-1 rounded w-1/2 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+          />
+          <button onClick={() => removeRow(index)} className="text-red-600 font-bold">×</button>
+        </div>
+      ))}
+      <button onClick={addRow} className="text-sm text-blue-600 mt-1">+ Add</button>
+    </div>
+  );
+};
+
+const Home = () => {
+  const [method, setMethod] = useState("GET");
+  const [url, setUrl] = useState("");
+  const [headers, setHeaders] = useState([{ key: "", value: "" }]);
+  const [queryParams, setQueryParams] = useState([{ key: "", value: "" }]);
+  const [bodyType, setBodyType] = useState("none");
+  const [jsonBody, setJsonBody] = useState("{\n  \n}");
+  const [formData, setFormData] = useState([{ key: "", value: "" }]);
+  const [urlEncoded, setUrlEncoded] = useState([{ key: "", value: "" }]);
+  const [response, setResponse] = useState(null);
+  const [resTime, setResTime] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
+  const [resHeaders, setResHeaders] = useState(null);
+  const [error, setError] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState("");
+  const [folders, setFolders] = useState([]);
+  const [selectedFolder, setSelectedFolder] = useState("");
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const userId = localStorage.getItem("id");
+        const token = localStorage.getItem("token");
+        if (!userId || !token) {
+          toast.error("Please log in to view collections", { toastId: "auth-error-collections" });
+          setCollections([]);
+          return;
+        }
+
+        const toastId = toast.loading("Fetching collections...");
+        const res = await axios.get(`http://localhost:5000/api/collections/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = Array.isArray(res.data) ? res.data : [];
+        setCollections(data);
+        toast.update(toastId, {
+          render: "Collections loaded successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } catch (err) {
+        console.error("Error fetching collections:", err.response?.data || err.message);
+        toast.error(`Failed to fetch collections: ${err.response?.data?.message || err.message}`, {
+          toastId: "fetch-collections-error",
+        });
+        setCollections([]);
+      }
+    };
+
+    fetchCollections();
+  }, []);
+
+  useEffect(() => {
+    const fetchFolders = async () => {
+      if (!selectedCollection) {
+        setFolders([]);
+        return;
+      }
+      try {
+        const toastId = toast.loading("Fetching folders...");
+        const res = await axios.get(`http://localhost:5000/api/folders/${selectedCollection}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const data = Array.isArray(res.data) ? res.data : [];
+        setFolders(data);
+        toast.update(toastId, {
+          render: "Folders loaded successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } catch (err) {
+        console.error("Error fetching folders:", err.response?.data || err.message);
+        toast.error(`Failed to fetch folders: ${err.response?.data?.message || err.message}`, {
+          toastId: "fetch-folders-error",
+        });
+        setFolders([]);
+      }
+    };
+
+    fetchFolders();
+  }, [selectedCollection]);
+
+  const handleSend = async () => {
+    if (!url.trim()) {
+      toast.warn("Please enter a valid URL", { toastId: "url-warn" });
+      return;
+    }
+    try {
+      setResponse(null);
+      setError(null);
+      setStatusCode(null);
+      setResHeaders(null);
+
+      const headersObj = {};
+      headers.forEach(({ key, value }) => {
+        if (key) headersObj[key] = value;
+      });
+
+      const queryString = queryParams
+        .filter(({ key }) => key)
+        .map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join("&");
+
+      const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+      let body = null;
+      if (!["GET", "DELETE"].includes(method)) {
+        if (bodyType === "raw") {
+          try {
+            body = JSON.parse(jsonBody || "{}");
+          } catch (e) {
+            toast.error("Invalid JSON body", { toastId: "json-error" });
+            return;
+          }
+        } else if (bodyType === "form-data") {
+          body = new FormData();
+          formData.forEach(({ key, value }) => key && body.append(key, value));
+        } else if (bodyType === "x-www-form-urlencoded") {
+          const encoded = new URLSearchParams();
+          urlEncoded.forEach(({ key, value }) => key && encoded.append(key, value));
+          body = encoded;
+          headersObj["Content-Type"] = "application/x-www-form-urlencoded";
+        }
+      }
+
+      const toastId = toast.loading("Sending request...");
+      const start = performance.now();
+      const res = await axios({
+        method,
+        url: fullUrl,
+        headers: headersObj,
+        data: body,
+      });
+      const end = performance.now();
+
+      setResponse(res.data);
+      setStatusCode(res.status);
+      setResTime(Math.round(end - start));
+      setResHeaders(res.headers);
+
+      // Save to history
+      await axios.post(
+        "http://localhost:5000/api/history",
+        {
+          url: fullUrl,
+          method,
+          statusCode: res.status,
+          responseTime: Math.round(end - start),
+          responseData: res.data,
+          user: localStorage.getItem("id"),
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      toast.update(toastId, {
+        render: "Request sent successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (err) {
+      const end = performance.now();
+      setError(err.response?.data || err.message);
+      setStatusCode(err.response?.status || "Error");
+      setResHeaders(err.response?.headers || {});
+      setResTime(Math.round(end - start));
+
+      // Save error to history
+      await axios.post(
+        "http://localhost:5000/api/history",
+        {
+          url: fullUrl,
+          method,
+          statusCode: err.response?.status || 0,
+          responseTime: Math.round(end - start),
+          responseData: err.response?.data || err.message,
+          user: localStorage.getItem("id"),
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      toast.error(`Failed to send request: ${err.response?.data?.message || err.message}`, {
+        toastId: "send-error",
+      });
+    }
+  };
+
+  const handleSaveRequest = async () => {
+    if (!selectedCollection) {
+      toast.warn("Please select a collection", { toastId: "no-collection" });
+      return;
+    }
+    if (!url.trim()) {
+      toast.warn("Please enter a valid URL", { toastId: "no-url" });
+      return;
+    }
+    try {
+      const payload = {
+        collectionId: selectedCollection,
+        folderId: selectedFolder || null,
+        request: {
+          method,
+          url,
+          headers: headers.filter(h => h.key),
+          params: queryParams.filter(q => q.key),
+          bodyType,
+          body:
+            bodyType === "raw"
+              ? jsonBody
+              : bodyType === "form-data"
+              ? formData.filter(f => f.key)
+              : bodyType === "x-www-form-urlencoded"
+              ? urlEncoded.filter(u => u.key)
+              : null,
+        },
+      };
+
+      const res = await axios.post("http://localhost:5000/api/requests", payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      toast.update(toastId, {
+        render: "Request saved successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+      console.log("Saved request:", res.data);
+    } catch (err) {
+      console.error("Failed to save request:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      toast.error(`Failed to save request: ${err.response?.data?.message || err.message}`, {
+        toastId: "save-request-error",
+      });
+    }
+  };
+
+  // Test button for debugging saveRequest
+  
+
+  return (
+    <div className="p-4 max-w-screen-lg mx-auto dark:bg-gray-900">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">API Tester</h2>
+
+      {/* Collection & Folder Selector */}
+      <div className="flex space-x-4 mb-4">
+        <select
+          value={selectedCollection}
+          onChange={(e) => {
+            setSelectedCollection(e.target.value);
+            setSelectedFolder("");
+          }}
+          className="border px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+        >
+          <option value="">Select Collection</option>
+          {Array.isArray(collections) && collections.length > 0 ? (
+            collections.map((col) => (
+              <option key={col._id} value={col._id}>{col.collectionname}</option>
+            ))
+          ) : (
+            <option disabled>No collections available</option>
+          )}
+        </select>
+
+        <select
+          value={selectedFolder}
+          onChange={(e) => setSelectedFolder(e.target.value)}
+          className="border px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+          disabled={!folders.length}
+        >
+          <option value="">Select Folder (Optional)</option>
+          {folders.map((folder) => (
+            <option key={folder._id} value={folder._id}>{folder.foldername}</option>
+          ))}
+        </select>
+
+        <button
+          onClick={handleSaveRequest}
+          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          disabled={!selectedCollection}
+        >
+          Save Request
+        </button>
+      </div>
+
+      {/* Method & URL */}
+      <div className="flex space-x-2 mb-4">
+        <select
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+          className="border px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+        >
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>PATCH</option>
+          <option>DELETE</option>
+        </select>
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Request URL"
+          className="flex-1 border px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+        />
+        <button
+          onClick={handleSend}
+          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+        >
+          Send
+        </button>
+      </div>
+
+      {/* Headers */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-1 text-gray-800 dark:text-gray-100">Headers</h3>
+        <KeyValueTable data={headers} setData={setHeaders} />
+      </div>
+
+      {/* Query Params */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-1 text-gray-800 dark:text-gray-100">Query Parameters</h3>
+        <KeyValueTable data={queryParams} setData={setQueryParams} />
+      </div>
+
+      {/* Body Type */}
+      {!(method === "GET" || method === "DELETE") && (
+        <div className="mb-4">
+          <h3 className="font-semibold mb-1 text-gray-800 dark:text-gray-100">Body Type</h3>
+          <select
+            value={bodyType}
+            onChange={(e) => setBodyType(e.target.value)}
+            className="border px-2 py-1 rounded mb-2 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
           >
-            {loading ? 'Sending...' : 'Send'}
-          </button>
-        </div>
-        <div className="data mt-5">
-          <ul className="flex gap-5 border-b border-gray-600 pb-2">
-            <li><Link to="/params" className="hover:text-blue-400">Params</Link></li>
-            <li><Link to="/headers" className="hover:text-blue-400">Headers</Link></li>
-            <li><Link to="/body/none" className="hover:text-blue-400">Body</Link></li>
-            <li><Link to="#" className="hover:text-blue-400">Authorization</Link></li>
-            <li><Link to="#" className="hover:text-blue-400">Script</Link></li>
-            <li><Link to="#" className="hover:text-blue-400">Settings</Link></li>
-          </ul>
-          <div className="outlet mt-3">
-            <Outlet context={{ formUrlencodedData, setFormUrlencodedData, formData, setFormData, params, setParams, headers, setHeaders, rawBody, setRawBody }} />
-          </div>
-        </div>
-        <div className="response bg-gray-800 text-white h-64 w-full rounded border border-gray-600 p-4 mt-52 left-0 overflow-auto">
-          <h1 className="text-2xl ml-4 underline decoration-2 underline-offset-4">RESPONSE</h1>
-          {loading && <p className="ml-4 mt-2">Loading...</p>}
-          {/* {error && <p className="ml-4 mt-2 text-red-500">{error}</p>} */}
-          {response && (
-            <div className="ml-4 mt-2">
-              <p><strong>Status:</strong> {statusCode || 'N/A'}</p>
-              <p><strong>Response Time:</strong> {responseTime ? `${responseTime} ms` : 'N/A'}</p>
-              <p><strong>Headers:</strong></p>
-              <pre className="text-sm">{JSON.stringify(response.headers || {}, null, 2)}</pre>
-              <p><strong>Body:</strong></p>
-              <pre className="text-sm">{JSON.stringify(response, null, 2)}</pre>
-            </div>
+            <option value="raw">Raw (JSON)</option>
+            <option value="none">None</option>
+            <option value="form-data">Form-Data</option>
+            <option value="x-www-form-urlencoded">x-www-form-urlencoded</option>
+          </select>
+
+          {bodyType === "raw" && (
+            <textarea
+              className="w-full border rounded p-2 font-mono dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+              rows={8}
+              value={jsonBody}
+              onChange={(e) => setJsonBody(e.target.value)}
+            />
+          )}
+          {bodyType === "form-data" && (
+            <KeyValueTable data={formData} setData={setFormData} />
+          )}
+          {bodyType === "x-www-form-urlencoded" && (
+            <KeyValueTable data={urlEncoded} setData={setUrlEncoded} />
           )}
         </div>
-      </div>
-    </>
+      )}
+
+      {/* Response */}
+      {(response || error) && (
+        <div className="mt-6">
+          <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-gray-100">Response</h3>
+
+          <div className="flex space-x-4 mb-2 text-sm">
+            <div>
+              <strong>Status:</strong>{" "}
+              <span className={statusCode >= 200 && statusCode < 300 ? "text-green-600" : "text-red-600"}>{statusCode}</span>
+            </div>
+            <div>
+              <strong>Time:</strong> {resTime} ms
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-100">Headers</h4>
+            <div className="bg-gray-800 p-2 rounded overflow-auto text-sm text-gray-100">
+              <pre>{JSON.stringify(resHeaders, null, 2)}</pre>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-100">Body</h4>
+            {error ? (
+              <pre className="bg-gray-800 text-red-700 p-4 rounded whitespace-pre-wrap">{JSON.stringify(error, null, 2)}</pre>
+            ) : (
+              <pre className="bg-gray-800 p-4 rounded whitespace-pre-wrap text-gray-100">{JSON.stringify(response, null, 2)}</pre>
+            )}
+          </div>
+        </div>
+      )}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={localStorage.getItem("theme") || "light"}
+      />
+    </div>
   );
 };
 
