@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
@@ -13,6 +14,8 @@ const Profile = () => {
   });
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [preview, setPreview] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,6 +84,61 @@ const Profile = () => {
       console.error("Error updating profile:", err.response?.data || err.message);
       toast.error(`Failed to update profile: ${err.response?.data?.message || err.message}`, {
         toastId: "update-error",
+      });
+    }
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!["image/jpeg", "image/png"].includes(file.type)) {
+        toast.warn("Please upload a JPEG or PNG image", { toastId: "image-type-error" });
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast.warn("Image size must be less than 2MB", { toastId: "image-size-error" });
+        return;
+      }
+      setProfilePicture(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpdateProfilePicture = async () => {
+    if (!profilePicture) {
+      toast.warn("Please select an image to upload", { toastId: "no-image" });
+      return;
+    }
+    try {
+      const userId = localStorage.getItem("id");
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("profilepicture", profilePicture);
+
+      const toastId = toast.loading("Uploading profile picture...");
+      const res = await axios.put(
+        `http://localhost:5000/api/users/${userId}/picture`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setUser({ ...user, profilepicture: res.data.user.profilepicture });
+      setProfilePicture(null);
+      setPreview(null);
+      toast.update(toastId, {
+        render: "Profile picture updated successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (err) {
+      console.error("Error uploading profile picture:", err.response?.data || err.message);
+      toast.error(`Failed to upload profile picture: ${err.response?.data?.message || err.message}`, {
+        toastId: "upload-error",
       });
     }
   };
@@ -165,26 +223,53 @@ const Profile = () => {
     <div className="p-6 max-w-screen-lg mx-auto dark:bg-gray-900">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">Profile</h1>
 
-      {/* Profile Picture */}
-      {user.profilepicture ? (
-        <img
-          src={user.profilepicture}
-          alt="Profile"
-          className="w-24 h-24 rounded-full mb-4 object-cover"
-        />
-      ) : (
-        <div className="w-24 h-24 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center mb-4 text-gray-600 dark:text-gray-300">
-          No Image
-        </div>
-      )}
-
       {/* Dashboard Navigation */}
-      <button
-        onClick={() => navigate("/dashboard")}
-        className="bg-purple-600 text-white px-4 py-2 rounded mb-6 hover:bg-purple-700"
-      >
-        Go to Dashboard
-      </button>
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+
+      {/* Profile Picture */}
+      <div className="mb-6">
+        {preview || user.profilepicture ? (
+          <img
+            src={preview || `http://localhost:5000/${user.profilepicture}`}
+            alt="Profile"
+            className="w-24 h-24 rounded-full mb-4 object-cover"
+          />
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center mb-4 text-gray-600 dark:text-gray-300">
+            No Image
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/jpeg,image/png"
+          onChange={handleProfilePictureChange}
+          className="hidden"
+          id="profile-picture-upload"
+        />
+        <div className="flex gap-2">
+          <label
+            htmlFor="profile-picture-upload"
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 cursor-pointer"
+          >
+            {user.profilepicture ? "Change Picture" : "Add Picture"}
+          </label>
+          {profilePicture && (
+            <button
+              onClick={handleUpdateProfilePicture}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Upload Picture
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Update Profile */}
       <div className="mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
@@ -258,14 +343,7 @@ const Profile = () => {
       </div>
 
       {/* Theme Toggle */}
-      <div className="mb-6">
-        <button
-          onClick={toggleTheme}
-          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-        >
-          Switch to {theme === "light" ? "Dark" : "Light"} Mode
-        </button>
-      </div>
+
 
       {/* Account Actions */}
       <div className="flex gap-4">
@@ -310,6 +388,18 @@ const Profile = () => {
           </div>
         </div>
       )}
+      <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme={localStorage.getItem("theme") || "light"}
+            />
     </div>
   );
 };

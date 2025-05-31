@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Dashboard = () => {
   const [collections, setCollections] = useState([]);
@@ -12,6 +13,8 @@ const Dashboard = () => {
   const [historySearch, setHistorySearch] = useState("");
   const [folderName, setFolderName] = useState("");
   const [showFolderInput, setShowFolderInput] = useState(false);
+  const [collectionName, setCollectionName] = useState("");
+  const [showCollectionInput, setShowCollectionInput] = useState(false);
   const [stats, setStats] = useState({ totalCollections: 0, totalFolders: 0, collectionFolders: 0, collectionRequests: 0 });
 
   useEffect(() => {
@@ -31,7 +34,7 @@ const Dashboard = () => {
         const colRes = await axios.get(`http://localhost:5000/api/collections/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const colData = Array.isArray(colRes.data) ? colRes.data : []; // Fixed: Use colRes.data
+        const colData = Array.isArray(colRes.data) ? colRes.data : [];
         setCollections(colData);
 
         // Fetch total folders
@@ -43,7 +46,6 @@ const Dashboard = () => {
           totalFolders += Array.isArray(foldersRes.data) ? foldersRes.data.length : 0;
         }
 
-        // Fetch history
         const histRes = await axios.get(`http://localhost:5000/api/history/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -89,7 +91,6 @@ const Dashboard = () => {
         const folderData = Array.isArray(res.data) ? res.data : [];
         setFolders(folderData);
 
-        // Fetch request count for selected collection
         let requestCount = 0;
         for (const folder of folderData) {
           const requestsRes = await axios.get(`http://localhost:5000/api/requests/${folder._id}`, {
@@ -146,8 +147,7 @@ const Dashboard = () => {
   }, [selectedFolder]);
 
   const handleCreateCollection = async () => {
-    const name = prompt("Enter collection name:");
-    if (!name?.trim()) {
+    if (!collectionName.trim()) {
       toast.warn("Collection name cannot be empty", { toastId: "collection-warn" });
       return;
     }
@@ -155,13 +155,15 @@ const Dashboard = () => {
       const toastId = toast.loading("Creating collection...");
       const res = await axios.post(
         `http://localhost:5000/api/collections`,
-        { collectionname: name, user: localStorage.getItem("id") },
+        { collectionname: collectionName, user: localStorage.getItem("id") },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
       setCollections((prev) => [...prev, res.data]);
       setStats((prev) => ({ ...prev, totalCollections: prev.totalCollections + 1 }));
+      setCollectionName("");
+      setShowCollectionInput(false);
       toast.update(toastId, {
         render: "Collection created successfully!",
         type: "success",
@@ -230,7 +232,6 @@ const Dashboard = () => {
         setRequests([]);
         setStats((prev) => ({ ...prev, collectionFolders: 0, collectionRequests: 0 }));
       }
-      // Update stats
       const foldersRes = await axios.get(`http://localhost:5000/api/folders/${collectionId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -315,7 +316,7 @@ const Dashboard = () => {
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto dark:bg-gray-900 space-y-4">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">API Tester Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
 
       {/* Stats */}
       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
@@ -344,13 +345,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Collection Management */}
+      {/* Collection and Folder Management */}
       <div className="flex gap-2">
         <button
-          onClick={handleCreateCollection}
+          onClick={() => setShowCollectionInput(!showCollectionInput)}
           className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
         >
-          + Collection
+          {showCollectionInput ? "Cancel" : "+ Collection"}
         </button>
         <button
           onClick={() => setShowFolderInput(!showFolderInput)}
@@ -359,6 +360,24 @@ const Dashboard = () => {
           {showFolderInput ? "Cancel" : "+ Folder"}
         </button>
       </div>
+
+      {showCollectionInput && (
+        <div className="mt-2">
+          <input
+            type="text"
+            value={collectionName}
+            onChange={(e) => setCollectionName(e.target.value)}
+            placeholder="Enter collection name"
+            className="border px-2 py-1 rounded w-full mb-2 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+          />
+          <button
+            onClick={handleCreateCollection}
+            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          >
+            Create Collection
+          </button>
+        </div>
+      )}
 
       {showFolderInput && (
         <div className="mt-2">
@@ -512,6 +531,18 @@ const Dashboard = () => {
           <p className="text-gray-600 dark:text-gray-300">No history available</p>
         )}
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={localStorage.getItem("theme") || "light"}
+      />
     </div>
   );
 };

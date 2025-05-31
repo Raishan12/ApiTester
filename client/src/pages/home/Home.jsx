@@ -3,7 +3,6 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Reusable Key-Value Row Table
 const KeyValueTable = ({ data, setData }) => {
   const handleChange = (index, field, value) => {
     const updated = [...data];
@@ -131,6 +130,13 @@ const Home = () => {
   }, [selectedCollection]);
 
   const handleSend = async () => {
+    const userId = localStorage.getItem("id");
+    const token = localStorage.getItem("token");
+    if (!userId || !token) {
+      toast.error("Please log in to send API requests", { toastId: "auth-error-send" });
+      return;
+    }
+
     if (!url.trim()) {
       toast.warn("Please enter a valid URL", { toastId: "url-warn" });
       return;
@@ -289,12 +295,9 @@ const Home = () => {
     }
   };
 
-  // Test button for debugging saveRequest
-  
-
   return (
     <div className="p-4 max-w-screen-lg mx-auto dark:bg-gray-900">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">API Tester</h2>
+      {/* <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">API Tester</h2> */}
 
       {/* Collection & Folder Selector */}
       <div className="flex space-x-4 mb-4">
